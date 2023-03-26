@@ -1,3 +1,3 @@
-Testing repository
+3.26
 
-还没建好先试一下ww
+    看到Neural Network之前结束 assignment1 KNN part complete
