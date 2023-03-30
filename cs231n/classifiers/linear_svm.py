@@ -55,8 +55,18 @@ def svm_loss_naive(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
-
+    for i in range(num_train):
+        scores = X[i].dot(W)
+        correct_class_score = scores[y[i]]
+        for j in range(num_classes):
+            if j == y[i]:
+                continue
+            margin = scores[j] - correct_class_score + 1  # note delta = 1
+            if margin > 0:
+                dW[:,j]=dW[:,j]+X[i]
+                dW[:,y[i]]=dW[:,y[i]]-X[i]
+    dW=dW/num_train
+    dW+=reg*2*W
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     return loss, dW
@@ -78,7 +88,14 @@ def svm_loss_vectorized(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    scores=X.dot(W)
+    num_train = X.shape[0]
+    correct_class_score = np.reshape(scores[range(0,num_train),y],(num_train,1))
+    scores=scores-correct_class_score+1
+    scores[range(0,num_train),y]=0
+    scores=np.clip(scores,a_min=0,a_max=None)
+    loss+= np.sum(scores)/num_train
+    loss+= reg * np.sum(W*W)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -93,7 +110,18 @@ def svm_loss_vectorized(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    scores=X.dot(W)
+    num_train = X.shape[0]
+    correct_class_score = np.reshape(scores[range(0,num_train),y],(num_train,1))
+    scores=scores-correct_class_score+1
+    scores[range(0,num_train),y]=0
+    scores=np.clip(scores,a_min=0,a_max=None)
+    formulated_mat=scores>0
+    formulated_mat=formulated_mat.astype(int)
+    formulated_mat[range(0,num_train),y]=-np.sum(formulated_mat,axis=1)
+    dW=X.T.dot(formulated_mat)
+    dW=dW/num_train
+    dW+= reg * 2 * W 
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
