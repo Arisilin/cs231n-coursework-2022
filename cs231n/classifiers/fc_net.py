@@ -55,7 +55,11 @@ class TwoLayerNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        self.params=dict()
+        self.params['W1']=np.random.normal(0,weight_scale,size=(input_dim,hidden_dim))
+        self.params['b1']=np.zeros(hidden_dim)
+        self.params['W2']=np.random.normal(0,weight_scale,size=(hidden_dim,num_classes))
+        self.params['b2']=np.zeros(num_classes)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -87,8 +91,9 @@ class TwoLayerNet(object):
         # class scores for X and storing them in the scores variable.              #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        (affine_layer1_out,cache_affine1)=affine_forward(X,self.params['W1'],self.params['b1'])
+        (relu_layer1_out,cache_relu)=relu_forward(affine_layer1_out)
+        (scores,cache_affine2)=affine_forward(relu_layer1_out,self.params['W2'],self.params['b2'])
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -112,8 +117,18 @@ class TwoLayerNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        grads=dict()#backward propagation
+        loss,grads['scores']=softmax_loss(scores,y)
+        grads['X1.5'],grads['W2'],grads['b2']=affine_backward(grads['scores'],cache_affine2)
+        grads['X1']=relu_backward(grads['X1.5'],cache_relu)
+        grads['X0'],grads['W1'],grads['b1']=affine_backward(grads['X1'],cache_affine1)
+        #regularization loss & regularization grads for W1,W2
+        loss+=0.5*self.reg*(np.sum(self.params['W1']**2)+np.sum(self.params['W2']**2))
+        grads['W1']+=self.reg*self.params['W1']
+        grads['W2']+=self.reg*self.params['W2']
 
+        del grads['X1.5'],grads['X1'],grads['X0'],grads['scores']
+        
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #

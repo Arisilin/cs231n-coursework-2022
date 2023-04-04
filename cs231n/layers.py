@@ -28,7 +28,10 @@ def affine_forward(x, w, b):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    dim=np.ndim(np.array(x))
+    D=np.prod(x.shape[1:dim])
+    xreshape=np.reshape(x,(x.shape[0],D))
+    out=xreshape.dot(w)+np.reshape(b,(1,w.shape[1]))
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -61,7 +64,16 @@ def affine_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    N=x.shape[0]
+    dim=len(x.shape)
+    D=w.shape[0]
+    M=w.shape[1]
+    xreshape=np.reshape(x,(N,D))
+    dx=dout.dot(w.T) # Strongly recommended for elementwise computation for dx 
+    dx=np.reshape(dx,x.shape)
+    # dx=(dout.dot(w.T)).reshape((N)+x.shape[1:dim])
+    dw=xreshape.T.dot(dout)# same as previous comment.
+    db=np.sum(dout,axis=0)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -87,7 +99,7 @@ def relu_forward(x):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    out=np.clip(x,a_min=0,a_max=None)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -113,9 +125,9 @@ def relu_backward(dout, cache):
     # TODO: Implement the ReLU backward pass.                                 #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
-
+    out=np.clip(x,a_min=0,a_max=None)
+    out=(out>0).astype(int)
+    dx=dout*out
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -772,9 +784,16 @@ def svm_loss(x, y):
     # TODO: Copy over your solution from A1.
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
-
+    
+    N,C=x.shape
+    true_scores=x[range(N),y].reshape((N,1))
+    x=x-true_scores+1
+    x[range(N),y]=0
+    loss=np.sum(x)/N
+    x=(x>0).astype(int)
+    x[range(N),y]=-np.sum(x,axis=1)
+    dx=x/N
+    
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -802,8 +821,15 @@ def softmax_loss(x, y):
     # TODO: Copy over your solution from A1.
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
+    #Warning:this part of softmax_loss only implement the training-time loss(since weight is not given)
+    N,C=x.shape
+    exp_score=np.exp(x)
+    rat_true_to_sum=exp_score[range(0,N),y]/np.sum(exp_score,axis=1)
+    loss=np.sum(-np.log(rat_true_to_sum))/N
+    dx=exp_score/exp_score[range(0,N),y].reshape((N,1)) * rat_true_to_sum.reshape((N,1))
+    dx[range(0,N),y]=0
+    dx[range(0,N),y]=-np.sum(dx,axis=1)
+    dx/=N
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
