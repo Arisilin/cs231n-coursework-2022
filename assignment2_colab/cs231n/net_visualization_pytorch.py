@@ -34,7 +34,13 @@ def compute_saliency_maps(X, y, model):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    output=model(X)
+    loss=torch.sum(output.gather(1,y.view(-1,1)).squeeze())
+    loss.backward()
+    saliency=X.grad
+    saliency=torch.abs(saliency)
+    saliency,_=torch.max(saliency,dim=1)
+    X.grad.zero_()
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
@@ -75,9 +81,20 @@ def make_fooling_image(X, target_y, model):
     # You can print your progress over iterations to check your algorithm.       #
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
-
+    iter_time=0
+    while(1):
+        print(iter_time)
+        output=model(X_fooling)
+        if(torch.max(output)==output[0][target_y]):
+            break
+        loss=output[0,target_y]
+        loss.backward()
+        with torch.no_grad():
+            grad=X_fooling.grad
+            dX=learning_rate*grad/torch.sqrt(torch.sum(grad*grad)) 
+            X_fooling+=dX
+            X_fooling.grad.zero_()
+        iter_time+=1
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
     #                             END OF YOUR CODE                               #
@@ -93,8 +110,18 @@ def class_visualization_update_step(img, model, target_y, l2_reg, learning_rate)
     # Be very careful about the signs of elements in your code.            #
     ########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
+    img=img.requires_grad_()
+    while(1):
+        output=model(img)
+        if(torch.max(output)==output[0][target_y]):
+            break
+        loss=output[0][target_y]-l2_reg*torch.sum(img*img)
+        loss.backward()
+        with torch.no_grad():
+            grad=img.grad
+            dX=learning_rate*grad
+            img+=dX
+            img.grad.zero_()
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ########################################################################
